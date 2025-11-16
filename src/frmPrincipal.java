@@ -27,20 +27,21 @@ public class frmPrincipal extends javax.swing.JFrame {
     public frmPrincipal() {
         initComponents();
         setLocationRelativeTo(null);
-        setResizable(false); 
+        setResizable(false);
+        txtCampo3.setEnabled(false);
         
         String[] estudiante = {"Indice","Nombre, ","Edad","Nota 1", "Nota 2", "Promedio"};
         modeloE = new DefaultTableModel(estudiante, 0);
         TablaEstudiantes.setModel(modeloE);
         
-        String[] docente = {"Indice","Nombre", "Edad", "Sueldo", "Sueldo", "HorasExtras", "ValorHorasExtras", "TotalSueldo"};
+        String[] docente = {"Indice","Nombre", "Edad", "Sueldo", "HorasExtras", "ValorHorasExtras", "TotalSueldo"};
         modeloD = new DefaultTableModel(docente, 0);
         TablaDocentes.setModel(modeloD);
         
     }
     
     public boolean isEmpty(String txt){
-        if(!txt.trim().isEmpty()){
+        if(txt.trim().isEmpty()){
             JOptionPane.showMessageDialog(this, "Error: No Pueden Haber Campos Vacios", "Error", JOptionPane.ERROR_MESSAGE);
             return true;
         }
@@ -55,9 +56,29 @@ public class frmPrincipal extends javax.swing.JFrame {
         return false;
     }
     
+    private void limpiarTxt(){
+        txtNombre.setText("");
+        txtEdad.setText("");
+        txtCampo1.setText("");
+        txtCampo2.setText("");
+        txtCampo3.setText("");
+        
+        txtNombre.requestFocus();
+    }
+    
     private void ActualizarTablas(){
         modeloE.setRowCount(0);
         modeloD.setRowCount(0);
+    }
+    
+    public void agregarFilaE(int index, String nombre, int edad, double nota1, double nota2, double promedio){
+        Object[] fila = {index, nombre, edad, nota1, nota2, promedio};
+        modeloE.addRow(fila);
+    }
+    
+    public void agregarFilaD(int index, String nombre, int edad, double sueldo, int horasExtras, double valorHorasExtra, double TotalSueldo){
+        Object[] fila = {index, nombre, edad,sueldo, horasExtras, valorHorasExtra, TotalSueldo};
+        modeloD.addRow(fila);
     }
     
     private void ActualizarEtiqueta(){
@@ -76,27 +97,84 @@ public class frmPrincipal extends javax.swing.JFrame {
         }
     }
     
+    private boolean verificarCamposVacios(String txtNombre, String txtEdad, String txtCampo1, String txtCampo2){
+        
+        if(isEmpty(txtNombre) || isEmpty(txtEdad) || isEmpty(txtCampo1) || isEmpty(txtCampo2)){
+            return true;
+        }
+        
+        return false;
+    }
+    
     private void agregarElemento(){
+        
+             
+        if(cboTipo.getSelectedItem().equals("Seleccione")){
+            JOptionPane.showMessageDialog(this, "ERROR: Debe Seleccionar Una Opcion", "ERROR", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if(verificarCamposVacios(txtNombre.getText(), txtEdad.getText(), txtCampo1.getText(), txtCampo2.getText())){
+            return;
+        }
+        
         if(isNumber(txtEdad.getText())){
             return;
         }
         
+        int index = 0;
         String nombre = txtNombre.getText();
         int edad = Integer.parseInt(txtEdad.getText());
-            
+        
+        
         if(cboTipo.getSelectedItem().equals("Estudiante")){
+            
             jTipo.setText("Estudiante");
+            
+            
             double n1 = Double.parseDouble(txtCampo1.getText());
             double n2 = Double.parseDouble(txtCampo2.getText());
-            txtCampo3.setText((n1 + n2/2) + "");
+            double promedio = ((n1 + n2)/2);
+            
+            txtCampo3.setText(((n1 + n2)/2) + "");
             lista.add(new Estudiante(n1, n2, nombre, edad));
+            
+            int count = 0;
+            for(Persona dato : lista){
+                if(dato.nombre.equals(nombre)){
+                    index = count;
+                    break;
+                }
+                count++;
+            }  
+            
+            agregarFilaE(index, nombre, edad, n1, n2, promedio);
+            
         }
-        else{
+        else if(cboTipo.getSelectedItem().equals("Docente")){
+            
             jTipo.setText("Docente");
+            txtCampo3.setEnabled(true);
+            
             double sueldo = Double.parseDouble(txtCampo1.getText());
             int horas = Integer.parseInt(txtCampo2.getText());
-            double valor = Double.parseDouble(txtCampo3.getText());
-            lista.add(new Docente(sueldo, horas, valor, nombre, edad));
+            double valorHorasExtras = Double.parseDouble(txtCampo3.getText());
+            double totalSueldo = sueldo + (horas + valorHorasExtras);
+            txtCampo3.setText(totalSueldo + "");
+            
+            lista.add(new Docente(sueldo, horas, valorHorasExtras, nombre, edad));
+                    
+            int count = 0;
+            for(Persona dato : lista){
+                if(dato.getNombre().equals(nombre)){
+                    index = count;
+                    break;
+                }
+                count++;
+            }  
+            
+            agregarFilaD(index, nombre, edad, sueldo, horas, valorHorasExtras, totalSueldo);
+           
         }
         
         txtHistorial.setText("");
@@ -104,13 +182,8 @@ public class frmPrincipal extends javax.swing.JFrame {
             txtHistorial.append(p.mostrarInfo());
         }
         
-        txtNombre.setText("");
-        txtEdad.setText("");
-        txtCampo1.setText("");
-        txtCampo2.setText("");
-        txtCampo3.setText("");
+        limpiarTxt();
         
-        txtNombre.requestFocus();
     }
     
     private void modificarElemento(){      
@@ -119,12 +192,12 @@ public class frmPrincipal extends javax.swing.JFrame {
         String nuevoNombre = JOptionPane.showInputDialog("Ingrese Nombre A Modificar: ");
         
         if(nombreBuscado.trim().isEmpty() || nombreBuscado == null){
-            JOptionPane.showMessageDialog(this, "Error: Debe Un Nombre a Buscar", "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error: Debe Ingresar Un Nombre", "ERROR", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
         if(nuevoNombre.isEmpty() || nuevoNombre == null){
-            JOptionPane.showMessageDialog(this, "Error: Debe Ingresar Un Nuevo Nombre",  "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error: No Puede Estar Vacio",  "ERROR", JOptionPane.ERROR_MESSAGE);
             return;
         }
          
@@ -242,7 +315,7 @@ public class frmPrincipal extends javax.swing.JFrame {
         txtHistorial.setRows(5);
         jScrollPane1.setViewportView(txtHistorial);
 
-        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 50, 260, 450));
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 50, 260, 550));
 
         jPanel2.setBackground(new java.awt.Color(248, 255, 225));
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -261,7 +334,7 @@ public class frmPrincipal extends javax.swing.JFrame {
         jLabel4.setText("Tipo:");
         jPanel2.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 200, -1, -1));
 
-        cboTipo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Estudiante", "Docente" }));
+        cboTipo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione", "Estudiante", "Docente" }));
         cboTipo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboTipoActionPerformed(evt);
@@ -284,19 +357,20 @@ public class frmPrincipal extends javax.swing.JFrame {
         jPanel2.add(jCampo3, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 370, -1, -1));
         jPanel2.add(txtCampo3, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 390, 110, -1));
 
+        btnAgregar.setFont(new java.awt.Font("CaskaydiaMono NF SemiBold", 0, 14)); // NOI18N
         btnAgregar.setText("Agregar");
         btnAgregar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAgregarActionPerformed(evt);
             }
         });
-        jPanel2.add(btnAgregar, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 440, 90, -1));
+        jPanel2.add(btnAgregar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 430, 90, -1));
 
         jTipo1.setFont(new java.awt.Font("CaskaydiaMono NF SemiBold", 0, 14)); // NOI18N
         jTipo1.setText("Informacion");
         jPanel2.add(jTipo1, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 30, -1, -1));
 
-        jPanel3.setBackground(new java.awt.Color(255, 229, 204));
+        jPanel3.setBackground(new java.awt.Color(235, 235, 255));
         jPanel3.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -306,26 +380,29 @@ public class frmPrincipal extends javax.swing.JFrame {
 
         jPanel2.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 260, 80));
 
+        btnEditar.setFont(new java.awt.Font("CaskaydiaMono NF SemiBold", 0, 14)); // NOI18N
         btnEditar.setText("Editar");
         btnEditar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnEditarActionPerformed(evt);
             }
         });
-        jPanel2.add(btnEditar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 440, 90, -1));
+        jPanel2.add(btnEditar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 510, 90, -1));
 
+        btnRemover.setFont(new java.awt.Font("CaskaydiaMono NF SemiBold", 0, 14)); // NOI18N
         btnRemover.setText("Remover");
         btnRemover.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRemoverActionPerformed(evt);
             }
         });
-        jPanel2.add(btnRemover, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 480, 90, -1));
+        jPanel2.add(btnRemover, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 470, 90, -1));
 
+        btnBuscar.setFont(new java.awt.Font("CaskaydiaMono NF SemiBold", 0, 14)); // NOI18N
         btnBuscar.setText("Buscar");
-        jPanel2.add(btnBuscar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 480, 90, -1));
+        jPanel2.add(btnBuscar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 550, 90, -1));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 260, 530));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 260, 600));
 
         TablaDocentes.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -340,7 +417,7 @@ public class frmPrincipal extends javax.swing.JFrame {
         ));
         jScrollPane2.setViewportView(TablaDocentes);
 
-        jPanel1.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 270, -1, 230));
+        jPanel1.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 300, -1, 280));
 
         TablaEstudiantes.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -355,9 +432,9 @@ public class frmPrincipal extends javax.swing.JFrame {
         ));
         jScrollPane3.setViewportView(TablaEstudiantes);
 
-        jPanel1.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 30, -1, 230));
+        jPanel1.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 30, -1, 260));
 
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1010, 530));
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1010, 600));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

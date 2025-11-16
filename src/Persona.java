@@ -36,7 +36,8 @@ public class Persona {
     
     
     public String mostrarInfo(){
-        return "Nombre: " + nombre + ", Edad: " + edad + "\n";
+        return "Nombre: " + nombre + "\n"
+                + " Edad: " + edad + "\n";
     }
     
 }
